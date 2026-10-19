@@ -4,4 +4,17 @@ version = "0.1.0"
 edition = "2024"
 license-file = "LICENSE"
 
+[[bin]]
+name = "smuggler"
+path = "src/main.rs"
+
 [dependencies]
+bootleg-core = { path = "../bootleg-core" }
+futures-util = "0.3"
+hostname = "0.4"
+libc = "0.2"
+rand = "0.9"
+serde_json = "1"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "signal", "sync", "net"] }
+tokio-tungstenite = { version = "0.28", features = ["rustls-tls-webpki-roots"] }
+url = "2"

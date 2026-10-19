@@ -1,0 +1,68 @@
+# Create bootleg-project Secret separately; never commit the real project token.
+# Replace API origin + public project ID; kind load docker-image smuggler-demo:latest
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bootleg-demo
+  namespace: default
+data:
+  BOOTLEG_API_URL: https://bootleg.example.com
+  BOOTLEG_PROJECT_ID: "project_6m8x91b0349vbrq30fxn997q5s"
+  BOOTLEG_NAME_ENV: POD_NAME
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smuggler-demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels: {app: smuggler-demo}
+  template:
+    metadata:
+      labels: {app: smuggler-demo}
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 15
+      containers:
+        - name: app
+          image: smuggler-demo:latest
+          imagePullPolicy: Never
+          envFrom:
+            - configMapRef: {name: bootleg-demo}
+          env:
+            - name: BOOTLEG_PROJECT_TOKEN
+              valueFrom:
+                secretKeyRef: {name: bootleg-project, key: token}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef: {fieldPath: metadata.name}
+            - name: POD_UID
+              valueFrom:
+                fieldRef: {fieldPath: metadata.uid}
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef: {fieldPath: metadata.namespace}
+            - {name: BOOTLEG_CONTAINER_NAME, value: app}
+            - {name: BOOTLEG_CLUSTER_NAME, value: local-kind}
+          # Existing application probes belong here unchanged; smuggler does not proxy them.
+        - name: worker
+          image: smuggler-demo:latest
+          imagePullPolicy: Never
+          envFrom:
+            - configMapRef: {name: bootleg-demo}
+          env:
+            - name: BOOTLEG_PROJECT_TOKEN
+              valueFrom:
+                secretKeyRef: {name: bootleg-project, key: token}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef: {fieldPath: metadata.name}
+            - name: POD_UID
+              valueFrom:
+                fieldRef: {fieldPath: metadata.uid}
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef: {fieldPath: metadata.namespace}
+            - {name: BOOTLEG_CONTAINER_NAME, value: worker}
+            - {name: BOOTLEG_CLUSTER_NAME, value: local-kind}
