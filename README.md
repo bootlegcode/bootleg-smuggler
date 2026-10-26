@@ -47,7 +47,7 @@ Implementation note: this checkout does not yet have a built-in hosted origin. E
 - `src/process.rs`: Unix process-group and Linux subreaper adapter.
 - `src/main.rs`: argument/environment adapter and startup coordination.
 
-Shared contract: sibling `bootleg-core` revision **`5d37918fb8aef80f9b5a8cc443e7241e0af1d419`**. No shared-contract changes required. The path dependency intentionally follows the coordinator's shared checkout; Cargo.lock does not pin a path dependency's source revision.
+Shared contract: sibling `bootleg-core`; use `bootleg-{core,cli,smuggler,web}` under one parent. Exact current compatible dependency revisions are enforced by [the CLI pin manifest](../bootleg-cli/scripts/acceptance-revisions.json). Cargo.lock does not pin a path dependency's source revision. [Core evidence](../bootleg-core/docs/registration-evidence.md) records the exact historical acceptance revisions.
 
 ## Tests
 
@@ -77,8 +77,10 @@ The Dockerfile's final image demonstrates `ENTRYPOINT ["/usr/local/bin/smuggler"
 
 `examples/kind.yaml` supplies two replicas, each with two instrumented containers, explicit Downward API fields and runtime Secret references. The same pod label deliberately appears on both containers to exercise nonunique labels. Adapt the nonsecret API origin/project ID and load `smuggler-demo:latest` into kind. Provision `bootleg-project` Secret with key `token` through your normal secure workflow; no secret-bearing manifest is generated. Existing application probes should remain unchanged; this fixture adds no probe proxy. Service-account automount is disabled.
 
-## Integration handoff / remaining acceptance
+## Integration handoff / acceptance
 
-Verified locally: direct domain/serialization tests, real Unix children/signals, Linux orphan reaping and bounded shutdown, and real Docker PID 1 TERM/KILL behavior. See `HANDOFF.md` for the latest run counts.
+The original local checkpoint verified domain/serialization tests, real Unix children/signals, Linux orphan reaping and bounded shutdown, and Docker PID 1 TERM/KILL behavior. [HANDOFF.md](HANDOFF.md) preserves those historical run counts; this documentation update does not rerun tests.
 
-Blocked pending coordinator-provided eligible test credentials and an actual reachable control plane: the two real-web tests, token rotation/deactivation while connected, observed lease expiry/fencing across replicas, CLI/UI discovery, and Docker/kind end-to-end registration. The kind manifest is provided but has not been deployed against a live control plane. No claims of completed end-to-end registration, permission isolation, exact file drift, or sync are made.
+Coordinated registration acceptance subsequently passed with actual CLI/web/smuggler, Chromium, Docker and kind: discovery, rotation/deactivation, expiry/reconnect and permission isolation are no longer blocked on shared credentials. See [CLI acceptance](../bootleg-cli/docs/acceptance.md) for reproduction and reports. Stale-session callbacks have supplemental real-store/protocol-client evidence, not executable-agent evidence. The two standalone opt-in real-web tests above are separate and are not claimed as run by that harness.
+
+Registration and subsequent read-only CLI diff preview do not implement sync, transfer or remote filesystem mutation, and do not prove exact container filesystem equality. Registration acceptance is not a claim that broader web CI is green.
