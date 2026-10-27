@@ -1,0 +1,32 @@
+name: Linux supervisor
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: bootleg-smuggler
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          path: bootleg-smuggler
+          persist-credentials: false
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: bootlegcode/bootleg-core
+          ref: 3f43c6be679febf98577fa8047d0669f8fc3e482
+          path: bootleg-core
+          persist-credentials: false
+      - run: rustup toolchain install 1.98.1 --profile minimal --component rustfmt,clippy && rustup default 1.98.1
+      - run: cargo fmt --check
+      - run: cargo clippy --locked --all-targets -- -D warnings
+      - name: Unit and real Linux process tests (including orphan reaping)
+        run: cargo test --locked --all-targets
+      - name: Container build and Linux PID 1 TERM/KILL checks
+        run: |
+          export SMUGGLER_IMAGE="smuggler-ci:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          trap 'docker image rm "$SMUGGLER_IMAGE" >/dev/null 2>&1 || true' EXIT
+          docker build -f Dockerfile -t "$SMUGGLER_IMAGE" ..
+          bash tests/docker-smoke.sh
