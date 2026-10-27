@@ -16,6 +16,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: bootlegcode/bootleg-core
+          token: ${{ secrets.BOOTLEG_REPO_READ_TOKEN }}
           ref: 3f43c6be679febf98577fa8047d0669f8fc3e482
           path: bootleg-core
           persist-credentials: false
