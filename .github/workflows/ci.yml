@@ -20,7 +20,7 @@ jobs:
           ref: 3f43c6be679febf98577fa8047d0669f8fc3e482
           path: bootleg-core
           persist-credentials: false
-      - run: rustup toolchain install 1.98.1 --profile minimal --component rustfmt,clippy && rustup default 1.98.1
+      - run: rustup toolchain install 1.99.1 --profile minimal --component rustfmt,clippy && rustup default 1.99.1
       - run: cargo fmt --check
       - run: cargo clippy --locked --all-targets -- -D warnings
       - name: Unit and real Linux process tests (including orphan reaping)

@@ -1,6 +1,6 @@
 # Build from parent directory: docker build -f bootleg-smuggler/Dockerfile -t smuggler-demo .
 # Only source files are copied, never .env, git credentials or project tokens.
-FROM rust:1.94-bookworm AS source
+FROM rust:1.99.1-bookworm AS source
 WORKDIR /build
 COPY bootleg-core/Cargo.toml bootleg-core/Cargo.toml
 COPY bootleg-core/src bootleg-core/src
