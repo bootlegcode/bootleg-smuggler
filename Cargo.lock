@@ -40,7 +40,7 @@ dependencies = [
 
 [[package]]
 name = "bootleg-smuggler"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bootleg-core",
  "futures-util",
