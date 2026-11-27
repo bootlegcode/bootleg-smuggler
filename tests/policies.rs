@@ -38,6 +38,14 @@ fn startup_noop_overrides_invalid_configuration() {
 }
 #[test]
 fn credentials_and_origins_are_validated_and_redacted() {
+    let mut e = enabled();
+    e.remove("BOOTLEG_API_URL");
+    assert!(
+        resolve_enabled(&e)
+            .unwrap_err()
+            .contains("BOOTLEG_API_URL is required for registration")
+    );
+
     for (key, value) in [
         ("BOOTLEG_PROJECT_ID", "1"),
         ("BOOTLEG_PROJECT_ID", "01"),

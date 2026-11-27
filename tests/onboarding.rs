@@ -15,8 +15,8 @@ fn missing_application_shows_actionable_plain_guide_on_stderr() {
         assert!(text.contains("Let's give Smuggler an application"));
         assert!(text.contains("BOOTLEG_DISABLED=true cargo run -- --"));
         assert!(text.contains("BOOTLEG_PROJECT_TOKEN"));
-        assert!(text.contains("Your deployment supplies the connection settings"));
-        assert!(!text.contains("Set BOOTLEG_API_URL"));
+        assert!(text.contains("Set BOOTLEG_API_URL"));
+        assert!(text.contains("required for registration"));
         assert!(!text.contains('\x1b'));
     }
 }

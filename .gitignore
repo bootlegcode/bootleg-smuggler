@@ -1,1 +1,20 @@
-/target
+# Rust build output
+/target/
+
+# Local environment files and secrets; commit only example templates.
+.env
+.env.*
+!.env.example
+!.env.*.example
+.envrc
+
+# Local coding-agent state and instructions
+/.pi/
+/AGENTS.md
+
+# Editor and OS files
+/.idea/
+/.vscode/
+*.swp
+*~
+.DS_Store

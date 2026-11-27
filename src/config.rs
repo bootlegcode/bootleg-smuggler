@@ -78,9 +78,9 @@ pub fn resolve(
         return Err("BOOTLEG_PROJECT_TOKEN");
     }
     let mut endpoint = Url::parse(env.get("BOOTLEG_API_URL").ok_or(
-        "deployment connection settings are missing; restore your deployment configuration. For standalone/local testing, set BOOTLEG_API_URL (see README.md)",
+        "BOOTLEG_API_URL is required for registration; set it to your Bootleg server's HTTPS origin",
     )?)
-    .map_err(|_| "invalid connection override: BOOTLEG_API_URL must be a valid HTTPS origin")?;
+    .map_err(|_| "BOOTLEG_API_URL must be a valid origin")?;
     if !endpoint.username().is_empty()
         || endpoint.password().is_some()
         || endpoint.query().is_some()
@@ -89,7 +89,7 @@ pub fn resolve(
         || endpoint.path() != "/"
     {
         return Err(
-            "invalid connection override: BOOTLEG_API_URL must be a credential-free origin without a path, query, or fragment",
+            "BOOTLEG_API_URL must be a credential-free origin without a path, query, or fragment",
         );
     }
     let scheme = match endpoint.scheme() {
@@ -97,7 +97,7 @@ pub fn resolve(
         "http" if boolean(env, "BOOTLEG_ALLOW_INSECURE")? == Some(true) => "ws",
         _ => {
             return Err(
-                "invalid connection override: BOOTLEG_API_URL requires HTTPS (local testing only: BOOTLEG_ALLOW_INSECURE=true)",
+                "BOOTLEG_API_URL requires HTTPS (for local HTTP testing, set BOOTLEG_ALLOW_INSECURE=true)",
             );
         }
     };

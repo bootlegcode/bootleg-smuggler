@@ -54,9 +54,8 @@ fn render(missing_application: bool, color: bool) -> String {
          \x20 Set BOOTLEG_PROJECT_ID to your public project ID. Inject\n\
          \x20 BOOTLEG_PROJECT_TOKEN at runtime from your secret manager.\n\
          \x20 Never put the token in an image, build argument, or source control.\n\
-         \x20 Your deployment supplies the connection settings; normally you\n\
-         \x20 don't need to change them. BOOTLEG_API_URL is available for\n\
-         \x20 local testing or custom deployments (see README.md).\n\n\
+         \x20 Set BOOTLEG_API_URL to your Bootleg server's HTTPS origin.\n\
+         \x20 It is required for registration and has no default (see README.md).\n\n\
          \x20 With both project ID and token absent, Smuggler simply runs your app.\n\
          \x20 BOOTLEG_DISABLED=true always skips registration and networking.\n\
          \x20 When enabled, control-plane outages won't stop your app.\n\n\
