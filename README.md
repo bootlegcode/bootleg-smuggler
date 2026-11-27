@@ -4,12 +4,13 @@ Smuggler is an outbound-only entrypoint supervisor that registers containers wit
 
 ## Build from source
 
-Clone Smuggler alongside the public [`bootleg-core`](https://github.com/bootlegcode/bootleg-core) repository. Use the core revision pinned in [CI](.github/workflows/ci.yml); `Cargo.lock` does not pin the revision of a path dependency. Run these commands from the directory where you want both checkouts, with [rustup](https://rustup.rs/) installed:
+Clone Smuggler alongside the public [`bootleg-core`](https://github.com/bootlegcode/bootleg-core) repository. Use the core revision pinned in [`.github/bootleg-core.rev`](.github/bootleg-core.rev); `Cargo.lock` does not pin the revision of a path dependency. Run these commands from the directory where you want both checkouts, with [rustup](https://rustup.rs/) installed:
 
 ```sh
 git clone https://github.com/bootlegcode/bootleg-smuggler.git
 git clone https://github.com/bootlegcode/bootleg-core.git
-git -C bootleg-core checkout --detach 3f43c6be679febf98577fa8047d0669f8fc3e482
+read -r core_rev < bootleg-smuggler/.github/bootleg-core.rev
+git -C bootleg-core checkout --detach "$core_rev"
 cd bootleg-smuggler
 cargo build --locked
 ```
@@ -90,6 +91,21 @@ They exercise registration/heartbeat, reconnect identity, duplicate names/new li
 The Dockerfile's final image demonstrates `ENTRYPOINT ["/usr/local/bin/smuggler", "--"]` plus an application CMD. Persist a build-context-accurate full Git baseline via `--build-arg BOOTLEG_BUILD_COMMIT=…`; mark dirty builds with `--build-arg BOOTLEG_BUILD_DIRTY=true`. Default baseline is unknown/dirty, never falsely clean. Only the baseline, never a token, belongs in build arguments.
 
 `examples/kind.yaml` supplies two replicas, each with two instrumented containers, explicit Downward API fields and runtime Secret references. The same pod label deliberately appears on both containers to exercise nonunique labels. Adapt the nonsecret API origin/project ID and load `smuggler-demo:latest` into kind. Provision `bootleg-project` Secret with key `token` through your normal secure workflow; no secret-bearing manifest is generated. Existing application probes should remain unchanged; this fixture adds no probe proxy. Service-account automount is disabled.
+
+## Container releases
+
+Run `just` to list commands. From a clean `main` matching `origin/main`, use `just release` (patch), `just release minor`, or `just release major`. The recipe requires `just`, Python 3.11+, `vinnie`, Cargo, and the sibling `bootleg-core` checkout. It bumps `Cargo.toml` and `Cargo.lock`, commits the change, and pushes `main` and the `v`-prefixed tag together. If the push fails, fix the cause and retry the printed Git command rather than bumping again.
+
+A newly pushed `v*` tag that matches the Cargo version runs the Linux checks and then builds the Dockerfile for `linux/amd64` and `linux/arm64`. Both platforms are published under a single versioned tag, `ghcr.io/bootlegcode/bootleg-smuggler:<git-tag>`; the workflow does not publish `latest`. Set the GHCR package visibility to **Public** after the first publish if you want anonymous pulls.
+
+To run the published image after pushing a release (replace `v0.1.1` with the desired tag):
+
+```sh
+docker run --rm --network none -e BOOTLEG_DISABLED=true \
+  ghcr.io/bootlegcode/bootleg-smuggler:v0.1.1 /bin/echo hello
+```
+
+To wrap your own application, copy `/usr/local/bin/smuggler` from the published image into a compatible glibc-based application image (such as Debian Bookworm) and configure it as the entrypoint.
 
 ## License
 

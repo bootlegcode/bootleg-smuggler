@@ -1,0 +1,59 @@
+name: Release container
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+
+jobs:
+  checks:
+    if: github.event.created
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    name: Publish Linux AMD64 and ARM64 image
+    needs: checks
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          path: bootleg-smuggler
+          persist-credentials: false
+      - id: core
+        run: |
+          read -r revision < bootleg-smuggler/.github/bootleg-core.rev
+          echo "revision=$revision" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: bootlegcode/bootleg-core
+          ref: ${{ steps.core.outputs.revision }}
+          path: bootleg-core
+          persist-credentials: false
+      - uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
+        with:
+          platforms: arm64
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+      - name: Build and push the multi-platform image
+        env:
+          GHCR_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY,,}:$RELEASE_TAG"
+          revision=$(git -C bootleg-smuggler rev-parse HEAD)
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          trap 'docker logout ghcr.io >/dev/null' EXIT
+          docker buildx build --platform linux/amd64,linux/arm64 --push \
+            --tag "$image" \
+            --label "org.opencontainers.image.source=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" \
+            --label "org.opencontainers.image.revision=$revision" \
+            --label "org.opencontainers.image.version=${RELEASE_TAG#v}" \
+            -f bootleg-smuggler/Dockerfile .
+          printf 'Published `%s` for `linux/amd64` and `linux/arm64`.\n' "$image" >> "$GITHUB_STEP_SUMMARY"
